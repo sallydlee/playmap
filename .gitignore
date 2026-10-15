@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.vite/
+__pycache__/
+*.pyc
+.venv/
+.env
+.env.*
+.DS_Store
+data_pipeline/cache/
