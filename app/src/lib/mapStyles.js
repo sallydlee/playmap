@@ -10,7 +10,7 @@ export function blockGroupFill(sport) {
       '#bdbdbd',
       ['step', ['get', 'access_score'],
         SCORE_COLORS[0], 1, SCORE_COLORS[1], 2, SCORE_COLORS[2],
-        3, SCORE_COLORS[3], 4, SCORE_COLORS[4], 5, SCORE_COLORS[5]],
+        3, SCORE_COLORS[3], 4, SCORE_COLORS[4]],
     ];
   }
   const field = `walk_min_${sport}`;
@@ -19,14 +19,16 @@ export function blockGroupFill(sport) {
     ['==', ['get', field], null],
     '#bdbdbd',
     ['<=', ['get', field], WALK_THRESHOLD_MIN],
-    SCORE_COLORS[5],
+    SCORE_COLORS[SCORE_COLORS.length - 1],
     SCORE_COLORS[0],
   ];
 }
 
+// Solid dots are facilities in parks or other open sites; hollow dots are on
+// school grounds, which may not be open to the public after hours.
 export const facilityCircle = {
   'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 7],
-  'circle-color': ['case', ['get', 'is_public'], '#1f3a2e', '#ffffff'],
+  'circle-color': ['case', ['get', 'on_school_grounds'], '#ffffff', '#1f3a2e'],
   'circle-stroke-color': '#1f3a2e',
   'circle-stroke-width': 1.5,
 };

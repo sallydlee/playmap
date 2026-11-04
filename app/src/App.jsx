@@ -23,7 +23,8 @@ export default function App() {
   if (error) return <div className="status">Could not load data: {error}</div>;
   if (!data) return <div className="status">Loading PlayMap…</div>;
 
-  const isMock = data.citySummary.data_version?.startsWith('v0');
+  const { label, data_version: version } = data.citySummary;
+  const badge = label ?? (version?.startsWith('v0') ? `Demo data (${version})` : null);
 
   return (
     <div className="app">
@@ -36,7 +37,7 @@ export default function App() {
       />
       <header className="topbar">
         <h1>PlayMap</h1>
-        {isMock && <span className="badge">Demo data ({data.citySummary.data_version})</span>}
+        {badge && <span className="badge">{badge}</span>}
       </header>
       <section className="sheet" aria-label="Map controls and details">
         <SportFilter sport={sport} onChange={setSport} />

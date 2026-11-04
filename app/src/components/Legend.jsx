@@ -5,7 +5,7 @@ export default function Legend({ sport }) {
     const label = SPORTS.find((s) => s.id === sport)?.label;
     return (
       <div className="legend">
-        <span><i style={{ background: SCORE_COLORS[5] }} /> {label} within a 10-min walk</span>
+        <span><i style={{ background: SCORE_COLORS[SCORE_COLORS.length - 1] }} /> {label} within a 10-min walk</span>
         <span><i style={{ background: SCORE_COLORS[0] }} /> Not within 10 min</span>
       </div>
     );

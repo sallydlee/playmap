@@ -20,15 +20,18 @@ npm run dev
 Open the printed URL. To test on your phone, run `npm run dev -- --host` and
 open the Network URL on a phone on the same Wi-Fi.
 
-The app ships with **synthetic** data (labeled "Demo data" in the header) so it
-works before any real results exist.
+The app ships with the access and finance model's first results (v1, OSM
+facilities only), labeled "Preliminary" in the header.
 
 ## Data
 
 The four files in `app/public/data/` follow [docs/data_contract.md](docs/data_contract.md).
 
 ```bash
-# Synthetic data, no dependencies (what is committed now)
+# Real results: point at the folder of access and finance model outputs
+python data_pipeline/export_web_data.py --from-model path/to/outputs --version v1
+
+# Synthetic data, no dependencies
 python data_pipeline/export_web_data.py --synthetic
 
 # v0 mock data from real block groups and real OSM courts and fields
@@ -36,9 +39,9 @@ pip install -r data_pipeline/requirements.txt
 python data_pipeline/export_web_data.py --mock
 ```
 
-`--mock` walking times are straight-line placeholders, not the access model's
-results. `--from-db` will export the real results once the team's PostGIS
-tables exist.
+`--from-model` reads `block_groups_access.geojson`, `facilities_used.geojson`,
+`recommended_sites.geojson`/`.csv` and the summary CSVs. It stops with a list
+of problems if a GEOID, coordinate, or field doesn't match the contract.
 
 ## Deploy (Vercel)
 

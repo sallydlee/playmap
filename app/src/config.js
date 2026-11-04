@@ -15,17 +15,20 @@ export const DATA_FILES = {
   citySummary: '/data/city_summary.json',
 };
 
+// The access model's four facility types. Soccer and football share one
+// "rectangular_field" type in the model outputs.
 export const SPORTS = [
-  { id: 'tennis', label: 'Tennis' },
-  { id: 'basketball', label: 'Basketball' },
-  { id: 'soccer', label: 'Soccer' },
-  { id: 'baseball_softball', label: 'Baseball / softball' },
-  { id: 'football', label: 'Football' },
+  { id: 'tennis_court', label: 'Tennis' },
+  { id: 'basketball_court', label: 'Basketball' },
+  { id: 'rectangular_field', label: 'Soccer / football field' },
+  { id: 'baseball_diamond', label: 'Baseball / softball' },
 ];
 
-// A 10-minute walk, the goals document's access threshold.
+// A 10-minute walk, the goals document's access threshold. The model defines
+// it as 805 m; the export script converts meters to minutes at 80.5 m/min.
 export const WALK_THRESHOLD_MIN = 10;
 
-// Access score 0 (no facility types within a 10-minute walk) to 5 (all five).
+// Access score 0 (no facility types within a 10-minute walk) to 4 (all four).
 // Low scores are the warm colors so gaps stand out.
-export const SCORE_COLORS = ['#b2182b', '#ef8a62', '#fddbc7', '#d1e5f0', '#67a9cf', '#2166ac'];
+export const SCORE_COLORS = ['#b2182b', '#ef8a62', '#f7f7f7', '#67a9cf', '#2166ac'];
+export const MAX_SCORE = SCORE_COLORS.length - 1;
