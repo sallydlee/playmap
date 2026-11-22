@@ -6,6 +6,15 @@ const SOURCE_TEXT = {
   both: 'Mapped in OpenStreetMap and spotted by the model',
 };
 
+// Why a facility is or is not in the access scores. duplicate_of is set when a
+// detection is a facility already mapped in OSM, which is counted instead.
+function countedText(p) {
+  if (p.counts_for_access) return 'Yes';
+  if (p.duplicate_of) return 'Yes, as the mapped facility';
+  if (p.source === 'model' && p.confidence_band === 'low') return 'No, low confidence';
+  return 'Not yet';
+}
+
 export default function FacilityPanel({ facility, onClose }) {
   const p = facility.properties;
   const label = SPORTS.find((s) => s.id === p.sport)?.label ?? p.sport;
@@ -38,7 +47,7 @@ export default function FacilityPanel({ facility, onClose }) {
           </>
         )}
         <dt>Counted in access scores</dt>
-        <dd>{p.counts_for_access ? 'Yes' : 'Not yet'}</dd>
+        <dd>{countedText(p)}</dd>
       </dl>
       {isDetection && (
         <p className="note">

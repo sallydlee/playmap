@@ -71,6 +71,7 @@ export default function App() {
         <Legend
           sport={sport}
           hasDetections={hasDetections}
+          detectionsInScores={data.citySummary.detections_in_scores === true}
           showDetections={showDetections}
           onToggleDetections={toggleDetections}
         />

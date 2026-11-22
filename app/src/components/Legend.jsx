@@ -1,6 +1,6 @@
 import { FACILITY_COLORS, SCORE_COLORS, SPORTS } from '../config.js';
 
-function FacilityKey({ hasDetections, showDetections, onToggleDetections }) {
+function FacilityKey({ hasDetections, detectionsInScores, showDetections, onToggleDetections }) {
   return (
     <div className="legend legend-facilities">
       <span><b className="dot" style={{ background: FACILITY_COLORS.mapped }} />Mapped facility</span>
@@ -9,7 +9,7 @@ function FacilityKey({ hasDetections, showDetections, onToggleDetections }) {
         <label className="toggle">
           <input type="checkbox" checked={showDetections} onChange={(e) => onToggleDetections(e.target.checked)} />
           <b className="dot" style={{ background: FACILITY_COLORS.detection }} />
-          Model detections (unreviewed, not in scores yet)
+          {detectionsInScores ? 'Model detections (unreviewed)' : 'Model detections (unreviewed, not in scores yet)'}
         </label>
       )}
     </div>
