@@ -1,4 +1,4 @@
-import { SCORE_COLORS, WALK_THRESHOLD_MIN } from '../config.js';
+import { FACILITY_COLORS, SCORE_COLORS, WALK_THRESHOLD_MIN } from '../config.js';
 
 // Fill color for block groups: by access score, or by whether the selected
 // sport is within a 10-minute walk. Missing values (null) render gray.
@@ -24,11 +24,20 @@ export function blockGroupFill(sport) {
   ];
 }
 
-// Solid dots are facilities in parks or other open sites; hollow dots are on
-// school grounds, which may not be open to the public after hours.
+// Mapped (OSM) facilities: solid dark dots, hollow on school grounds, which may
+// not be open to the public after hours. Model detections: lime dots with a
+// dark ring. on_school_grounds is null for detections (not checked yet).
+const isDetection = ['==', ['get', 'source'], 'model'];
 export const facilityCircle = {
   'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 3, 15, 7],
-  'circle-color': ['case', ['get', 'on_school_grounds'], '#ffffff', '#1f3a2e'],
-  'circle-stroke-color': '#1f3a2e',
-  'circle-stroke-width': 1.5,
+  'circle-color': [
+    'case',
+    isDetection, FACILITY_COLORS.detection,
+    ['coalesce', ['get', 'on_school_grounds'], false], '#ffffff',
+    FACILITY_COLORS.mapped,
+  ],
+  'circle-stroke-color': FACILITY_COLORS.mapped,
+  'circle-stroke-width': ['case', isDetection, 1, 1.5],
 };
+// Draw detections under mapped facilities where they overlap.
+export const facilityLayout = { 'circle-sort-key': ['case', isDetection, 0, 1] };

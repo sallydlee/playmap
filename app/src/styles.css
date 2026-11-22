@@ -70,3 +70,11 @@ html, body, #root { margin: 0; height: 100%; }
 .walk li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .walk li.gap span:last-child { color: #b2182b; font-weight: 600; }
 .recs li { padding: 4px 0; }
+.legend-facilities { margin-top: -4px; }
+.legend .dot {
+  display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+  border: 1.5px solid #203627; margin-right: 4px; vertical-align: -1px;
+}
+.legend .toggle { display: inline-flex; align-items: center; gap: 2px; min-height: 32px; color: var(--ink); }
+.legend .toggle input { margin: 0 6px 0 0; width: 18px; height: 18px; }
+.note { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
