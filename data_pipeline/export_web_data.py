@@ -13,13 +13,15 @@ Modes:
   --detections FILE With --from-model: add the computer vision model's
                     detections GeoJSON (detroit_detections_CITY.geojson) to
                     the facilities layer, inside city limits only. They are
-                    marked counts_for_access=false because the access model
-                    has not been rerun with them.
+                    marked counts_for_access=false. Only for model runs that
+                    did not use detections (2026-11-04); later runs already
+                    list detections in facilities_used.geojson.
 
 Usage:
   python data_pipeline/export_web_data.py --from-model /path/to/outputs --version v1
   python data_pipeline/export_web_data.py --from-model /path/to/outputs --version v2 \
       --detections /path/to/detroit_detections_CITY.geojson
+  python data_pipeline/export_web_data.py --from-model /path/to/2026-11-22 --version v2
   python data_pipeline/export_web_data.py --synthetic
   python data_pipeline/export_web_data.py --mock
 """
@@ -212,15 +214,23 @@ def build_from_model(folder, version, label):
     facilities = []
     for f in fac_in["features"]:
         p = f["properties"]
-        facilities.append({"type": "Feature", "geometry": _geom(f["geometry"]), "properties": {
+        props = {
             "facility_id": p["facility_id"],
             "sport": p["type"],
             "source": {"osm": "osm", "detection": "model"}.get(p["source"], p["source"]),
-            "on_school_grounds": bool(p["on_school_grounds"]),
+            "on_school_grounds": None if p.get("on_school_grounds") is None else bool(p["on_school_grounds"]),
             "counts_for_access": bool(p["counts_for_access"]),
             "park_name": None,
             "confidence": _num(p.get("confidence")),
-        }})
+        }
+        # Runs that used detections (2026-11-22 on) carry these for detection rows.
+        for k in ("confidence_band", "status", "duplicate_of"):
+            if p.get(k) is not None:
+                props[k] = p[k]
+        if p.get("imagery_year") is not None:
+            props["imagery_year"] = int(p["imagery_year"])
+        facilities.append({"type": "Feature", "geometry": _geom(f["geometry"]), "properties": props})
+    used_detections = any(f["properties"]["source"] == "model" for f in facilities)
 
     # block_groups_served is only in the CSV; join it on scenario + rank.
     served = {(r["scenario"], int(r["rank"])): [g for g in r["block_groups_served"].split(";") if g]
@@ -255,10 +265,18 @@ def build_from_model(folder, version, label):
         return [{k: (v if k in ("scenario", "type") else _num(v, as_int=k in int_cols)) for k, v in r.items()}
                 for r in rows]
 
+    note = "Access and finance model results."
+    if used_detections:
+        counted = sum(f["properties"]["source"] == "model" and f["properties"]["counts_for_access"] for f in facilities)
+        note = (f"Access and finance model results using OSM facilities plus {counted:,} unreviewed computer "
+                "vision detections that are not already in OSM (see the model folder's README for which "
+                "confidence bands count). Detections that duplicate an OSM facility, or fall below the "
+                "cutoff, are shown on the map but not counted.")
     summary = {
         "data_version": version,
         "label": label,
-        "note": "Access and finance model results.",
+        "note": note,
+        "detections_in_scores": used_detections,
         "facility_source": sorted({f["properties"]["source"] for f in facilities}),
         "acs_years": "2019-2023",
         "walk_threshold_m": WALK_THRESHOLD_M,
@@ -268,6 +286,10 @@ def build_from_model(folder, version, label):
         "profiles": table("cluster_profiles.csv", int_cols=("cluster", "block_groups")),
         "cost_assumptions": table("cost_assumptions.csv"),
     }
+    if (folder / "sensitivity_by_confidence.csv").exists():
+        summary["sensitivity_by_confidence"] = [
+            {k: (v if k == "variant" else _num(v)) for k, v in r.items()}
+            for r in _read_csv(folder / "sensitivity_by_confidence.csv")]
     return ({"type": "FeatureCollection", "features": features},
             {"type": "FeatureCollection", "features": facilities}, recommendations, summary)
 
@@ -522,6 +544,8 @@ def main():
         if label is None and args.version != "v3":
             label = "Preliminary: OSM facilities only" if args.version == "v1" else "Preliminary results"
         block_groups, facilities, recommendations, summary = build_from_model(args.from_model, args.version, label)
+        if args.detections and summary["detections_in_scores"]:
+            parser.error("this model folder already includes detections in facilities_used; drop --detections")
         if args.detections:
             det_features, det_summary = build_detections(args.detections)
             facilities["features"].extend(det_features)
