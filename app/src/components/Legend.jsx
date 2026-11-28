@@ -9,7 +9,7 @@ function FacilityKey({ hasDetections, detectionsInScores, showDetections, onTogg
         <label className="toggle">
           <input type="checkbox" checked={showDetections} onChange={(e) => onToggleDetections(e.target.checked)} />
           <b className="dot" style={{ background: FACILITY_COLORS.detection }} />
-          {detectionsInScores ? 'Model detections (unreviewed)' : 'Model detections (unreviewed, not in scores yet)'}
+          {detectionsInScores ? 'Possible facilities (pending review)' : 'Possible facilities (pending review, not in scores yet)'}
         </label>
       )}
     </div>

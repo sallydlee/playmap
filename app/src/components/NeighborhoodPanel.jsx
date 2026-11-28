@@ -49,7 +49,7 @@ export default function NeighborhoodPanel({ feature, recommendations, onClose })
       </ul>
       {recs.length > 0 && (
         <>
-          <h3>Recommended to close gaps</h3>
+          <h3>Recommendation(s) to close gaps</h3>
           <ul className="recs">
             {recs.map((r) => (
               <li key={r.site_id}>
