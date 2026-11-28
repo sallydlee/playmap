@@ -40,11 +40,6 @@ python data_pipeline/export_web_data.py --from-model path/to/outputs --version v
 python data_pipeline/export_web_data.py --from-model path/to/2026-11-22 --version v2 \
   --label "Preliminary: includes unreviewed detections"
 
-# Older OSM-only run, with detections added to the map only (not the scores)
-python data_pipeline/export_web_data.py --from-model path/to/2026-11-04 --version v2 \
-  --label "Preliminary: scores use OSM facilities only" \
-  --detections path/to/detroit_detections_CITY.geojson
-
 # Synthetic data, no dependencies
 python data_pipeline/export_web_data.py --synthetic
 

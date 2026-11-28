@@ -33,7 +33,7 @@ Change a field name here first, then tell the app and dashboard owners.
 | `facility_id` | string | Stable across versions |
 | `sport` | string | See rules |
 | `source` | string | `osm`, `model`, or `both` |
-| `on_school_grounds` | boolean or null | Shown as a hollow dot in the app (OSM only). `null` for detections added with `--detections` (not checked) |
+| `on_school_grounds` | boolean or null | Shown as a hollow dot in the app (OSM only). `null` for detections |
 | `counts_for_access` | boolean | Whether the access model counted it |
 | `park_name` | string or null | |
 | `confidence` | number or null | Model detections only. A ranking score, not a probability |
@@ -45,10 +45,10 @@ Change a field name here first, then tell the app and dashboard owners.
 Model detection ids are `det/<detection_id>`, the same scheme the access model
 uses. `detection_id` can change between detection exports, so these ids are
 only stable within one export, an exception to the rule above. They are drawn
-as lime dots that can be switched off. In model runs from 2026-11-22 on,
-`counts_for_access` is true for detections the access model counted (high and
-medium confidence, not already in OSM); with `--detections` on an older run it
-is always false.
+as lime dots that can be switched off. `counts_for_access` is true for
+detections the access model counted (high and medium confidence, not already
+in OSM). The app expects a model run that counted detections (2026-11-22 or
+later).
 
 ## `block_groups.geojson` (polygons)
 
@@ -92,7 +92,4 @@ the 100 largest cities, from the goals document's Trust for Public Land
 citation), and the model's summary tables: `scenarios`, `gaps_by_type`,
 `profiles`, and `cost_assumptions`. `detections_in_scores` is true when the
 model run counted detections, and `sensitivity_by_confidence` then holds the
-model's results at each detection confidence cutoff. When detections are added with
-`--detections`, `detections` holds their counts (rows in the file, rows kept
-inside the city, by sport, by confidence band, by status), imagery years, and
-model versions.
+model's results at each detection confidence cutoff.
