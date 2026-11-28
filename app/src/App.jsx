@@ -4,6 +4,7 @@ import SportFilter from './components/SportFilter.jsx';
 import Legend from './components/Legend.jsx';
 import NeighborhoodPanel from './components/NeighborhoodPanel.jsx';
 import FacilityPanel from './components/FacilityPanel.jsx';
+import ExportPanel from './components/ExportPanel.jsx';
 import { loadData } from './lib/data.js';
 
 export default function App() {
@@ -83,6 +84,7 @@ export default function App() {
             onClose={() => setSelectedGeoid(null)}
           />
         )}
+        <ExportPanel recommendations={data.recommendations} />
       </section>
     </div>
   );
