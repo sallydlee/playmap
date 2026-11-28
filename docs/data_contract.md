@@ -33,10 +33,19 @@ Change a field name here first, then tell the app and dashboard owners.
 | `facility_id` | string | Stable across versions |
 | `sport` | string | See rules |
 | `source` | string | `osm`, `model`, or `both` |
-| `on_school_grounds` | boolean | Shown as a hollow dot in the app |
+| `on_school_grounds` | boolean or null | Shown as a hollow dot in the app. `null` for model detections (not checked yet) |
 | `counts_for_access` | boolean | Whether the access model counted it |
 | `park_name` | string or null | |
-| `confidence` | number or null | Model detections only |
+| `confidence` | number or null | Model detections only. A ranking score, not a probability |
+| `confidence_band` | string, optional | Model detections only: `high`, `medium`, `low` (cutoffs are placeholders until the hand-tagged test set is scored) |
+| `status` | string, optional | Model detections only: `unreviewed`, `verified`, or `rejected` |
+| `imagery_year` | integer, optional | Model detections only: year of the NAIP aerial photo |
+
+Model detection ids are `det/<detection_id>`, the same scheme the access model
+uses. `detection_id` can change between detection exports, so these ids are
+only stable within one export, an exception to the rule above. Until the access
+model is rerun with detections, they carry `counts_for_access: false` and are
+drawn as lime dots that can be switched off.
 
 ## `block_groups.geojson` (polygons)
 
@@ -78,4 +87,7 @@ Change a field name here first, then tell the app and dashboard owners.
 `walk_threshold_m`, `benchmark_spend_per_resident` ($139 Detroit vs $154 among
 the 100 largest cities, from the goals document's Trust for Public Land
 citation), and the model's summary tables: `scenarios`, `gaps_by_type`,
-`profiles`, and `cost_assumptions`.
+`profiles`, and `cost_assumptions`. When detections are added with
+`--detections`, `detections` holds their counts (rows in the file, rows kept
+inside the city, by sport, by confidence band, by status), imagery years, and
+model versions.

@@ -20,8 +20,11 @@ npm run dev
 Open the printed URL. To test on your phone, run `npm run dev -- --host` and
 open the Network URL on a phone on the same Wi-Fi.
 
-The app ships with the access and finance model's first results (v1, OSM
-facilities only), labeled "Preliminary" in the header.
+The app ships with the access and finance model's first results (OSM
+facilities only) plus the computer vision model's citywide detections (2022
+aerial imagery, 1,303 inside city limits, all unreviewed). Detections are lime
+dots on the map that can be switched off; they are not in the access scores
+until the access model is rerun with them, which the header badge says.
 
 ## Data
 
@@ -30,6 +33,11 @@ The four files in `app/public/data/` follow [docs/data_contract.md](docs/data_co
 ```bash
 # Real results: point at the folder of access and finance model outputs
 python data_pipeline/export_web_data.py --from-model path/to/outputs --version v1
+
+# Add the computer vision detections (kept inside city limits only)
+python data_pipeline/export_web_data.py --from-model path/to/outputs --version v2 \
+  --label "Preliminary: scores use OSM facilities only" \
+  --detections path/to/detroit_detections_CITY.geojson
 
 # Synthetic data, no dependencies
 python data_pipeline/export_web_data.py --synthetic
