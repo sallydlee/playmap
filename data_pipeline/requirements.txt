@@ -1,0 +1,4 @@
+# Only needed for --mock and --from-db; --synthetic uses the standard library.
+geopandas>=0.14
+osmnx>=2.0
+pygris>=0.1.6
