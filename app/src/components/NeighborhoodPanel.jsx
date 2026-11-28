@@ -12,7 +12,7 @@ function money(n) {
 
 export default function NeighborhoodPanel({ feature, recommendations, onClose }) {
   if (!feature) {
-    return <p className="hint">Tap an area on the map to see its access score.</p>;
+    return <p className="hint">Tap an area on the map to see its access score, or a dot to see the facility.</p>;
   }
   const p = feature.properties;
   const recs = recommendations.filter((r) => r.geoids?.includes(p.geoid) && r.scenario === 'full_gap_closure');

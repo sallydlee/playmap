@@ -10,8 +10,18 @@ Modes:
                     courts and fields (osmnx). Walking times are straight-line
                     placeholders, NOT the access model's results.
 
+  --detections FILE With --from-model: add the computer vision model's
+                    detections GeoJSON (detroit_detections_CITY.geojson) to
+                    the facilities layer, inside city limits only. They are
+                    marked counts_for_access=false. Only for model runs that
+                    did not use detections (2026-11-04); later runs already
+                    list detections in facilities_used.geojson.
+
 Usage:
   python data_pipeline/export_web_data.py --from-model /path/to/outputs --version v1
+  python data_pipeline/export_web_data.py --from-model /path/to/outputs --version v2 \
+      --detections /path/to/detroit_detections_CITY.geojson
+  python data_pipeline/export_web_data.py --from-model /path/to/2026-11-22 --version v2
   python data_pipeline/export_web_data.py --synthetic
   python data_pipeline/export_web_data.py --mock
 """
@@ -204,15 +214,23 @@ def build_from_model(folder, version, label):
     facilities = []
     for f in fac_in["features"]:
         p = f["properties"]
-        facilities.append({"type": "Feature", "geometry": _geom(f["geometry"]), "properties": {
+        props = {
             "facility_id": p["facility_id"],
             "sport": p["type"],
             "source": {"osm": "osm", "detection": "model"}.get(p["source"], p["source"]),
-            "on_school_grounds": bool(p["on_school_grounds"]),
+            "on_school_grounds": None if p.get("on_school_grounds") is None else bool(p["on_school_grounds"]),
             "counts_for_access": bool(p["counts_for_access"]),
             "park_name": None,
             "confidence": _num(p.get("confidence")),
-        }})
+        }
+        # Runs that used detections (2026-11-22 on) carry these for detection rows.
+        for k in ("confidence_band", "status", "duplicate_of"):
+            if p.get(k) is not None:
+                props[k] = p[k]
+        if p.get("imagery_year") is not None:
+            props["imagery_year"] = int(p["imagery_year"])
+        facilities.append({"type": "Feature", "geometry": _geom(f["geometry"]), "properties": props})
+    used_detections = any(f["properties"]["source"] == "model" for f in facilities)
 
     # block_groups_served is only in the CSV; join it on scenario + rank.
     served = {(r["scenario"], int(r["rank"])): [g for g in r["block_groups_served"].split(";") if g]
@@ -247,10 +265,18 @@ def build_from_model(folder, version, label):
         return [{k: (v if k in ("scenario", "type") else _num(v, as_int=k in int_cols)) for k, v in r.items()}
                 for r in rows]
 
+    note = "Access and finance model results."
+    if used_detections:
+        counted = sum(f["properties"]["source"] == "model" and f["properties"]["counts_for_access"] for f in facilities)
+        note = (f"Access and finance model results using OSM facilities plus {counted:,} unreviewed computer "
+                "vision detections that are not already in OSM (see the model folder's README for which "
+                "confidence bands count). Detections that duplicate an OSM facility, or fall below the "
+                "cutoff, are shown on the map but not counted.")
     summary = {
         "data_version": version,
         "label": label,
-        "note": "Access and finance model results.",
+        "note": note,
+        "detections_in_scores": used_detections,
         "facility_source": sorted({f["properties"]["source"] for f in facilities}),
         "acs_years": "2019-2023",
         "walk_threshold_m": WALK_THRESHOLD_M,
@@ -260,8 +286,94 @@ def build_from_model(folder, version, label):
         "profiles": table("cluster_profiles.csv", int_cols=("cluster", "block_groups")),
         "cost_assumptions": table("cost_assumptions.csv"),
     }
+    if (folder / "sensitivity_by_confidence.csv").exists():
+        summary["sensitivity_by_confidence"] = [
+            {k: (v if k == "variant" else _num(v)) for k, v in r.items()}
+            for r in _read_csv(folder / "sensitivity_by_confidence.csv")]
     return ({"type": "FeatureCollection", "features": features},
             {"type": "FeatureCollection", "features": facilities}, recommendations, summary)
+
+
+# --------------------------------------------------------------------------
+# Computer vision detections (shown on the map, not yet in the access scores)
+# --------------------------------------------------------------------------
+
+DETECTION_FIELDS = ["detection_id", "facility_type", "confidence", "confidence_band", "lat", "lon",
+                    "imagery_year", "model_version", "status", "in_city"]
+
+
+def _bool(v):
+    if isinstance(v, bool):
+        return v
+    if str(v).strip().lower() in ("true", "1"):
+        return True
+    if str(v).strip().lower() in ("false", "0"):
+        return False
+    raise ValueError(f"expected True/False, got {v!r}")
+
+
+def build_detections(path):
+    """Detections inside Detroit as contract facilities, plus counts for city_summary.json."""
+    coll = json.loads(Path(path).read_text())
+    _check_crs(coll, Path(path).name)
+    rows = [f["properties"] for f in coll["features"]]
+    for i, r in enumerate(rows):
+        missing = [k for k in DETECTION_FIELDS if k not in r]
+        if missing:
+            raise ValueError(f"detection row {i} is missing fields: {missing}")
+    ids = [r["detection_id"] for r in rows]
+    if len(set(ids)) != len(ids):
+        raise ValueError("detection_id values are not unique in this export")
+
+    in_city = [r for r in rows if _bool(r["in_city"])]
+    features = []
+    for r in in_city:
+        features.append({
+            "type": "Feature",
+            # The box center, which the detections file gives as lat/lon.
+            "geometry": {"type": "Point", "coordinates": [round(float(r["lon"]), 5), round(float(r["lat"]), 5)]},
+            "properties": {
+                # Same id scheme as the access model's facilities_used. detection_id
+                # can change between exports, so this id is only stable within one.
+                "facility_id": f"det/{r['detection_id']}",
+                "sport": r["facility_type"],
+                "source": "model",
+                "on_school_grounds": None,  # not checked for detections yet
+                "counts_for_access": False,  # access model not rerun with detections
+                "park_name": None,
+                "confidence": round(float(r["confidence"]), 3),
+                "confidence_band": r["confidence_band"],
+                "status": r["status"],
+                "imagery_year": int(r["imagery_year"]),
+            },
+        })
+
+    def count(key):
+        out = {}
+        for f in features:
+            k = f["properties"][key]
+            out[k] = out.get(k, 0) + 1
+        return dict(sorted(out.items()))
+
+    summary = {
+        "file": Path(path).name,
+        "rows_in_file": len(rows),
+        "rows_in_city": len(features),
+        "rows_outside_city_dropped": len(rows) - len(features),
+        "by_sport": count("sport"),
+        "by_confidence_band": count("confidence_band"),
+        "by_status": count("status"),
+        "imagery_years": sorted({f["properties"]["imagery_year"] for f in features}),
+        "model_versions": sorted({r["model_version"] for r in in_city}),
+        "counts_for_access": False,
+        "notes": [
+            "One detection is one box: a row of six tennis courts is six detections.",
+            "Confidence is a ranking score, not a probability. Band cutoffs are placeholders "
+            "until the hand-tagged test set is scored.",
+            "A detection means a facility is visible from above, not that the public can use it.",
+        ],
+    }
+    return features, summary
 
 
 # --------------------------------------------------------------------------
@@ -423,13 +535,28 @@ def main():
     mode.add_argument("--mock", action="store_true")
     parser.add_argument("--version", default="v1", help="data version for --from-model (v1, v2, v3)")
     parser.add_argument("--label", default=None, help="badge text in the app header; omit for final data")
+    parser.add_argument("--detections", metavar="FILE", default=None,
+                        help="with --from-model: computer vision detections GeoJSON to add to the map")
     args = parser.parse_args()
 
     if args.from_model:
         label = args.label
         if label is None and args.version != "v3":
             label = "Preliminary: OSM facilities only" if args.version == "v1" else "Preliminary results"
-        write_all(*build_from_model(args.from_model, args.version, label))
+        block_groups, facilities, recommendations, summary = build_from_model(args.from_model, args.version, label)
+        if args.detections and summary["detections_in_scores"]:
+            parser.error("this model folder already includes detections in facilities_used; drop --detections")
+        if args.detections:
+            det_features, det_summary = build_detections(args.detections)
+            facilities["features"].extend(det_features)
+            summary["facility_source"] = sorted({f["properties"]["source"] for f in facilities["features"]})
+            summary["detections"] = det_summary
+            summary["note"] = ("Access and finance model results. Access scores use the facilities marked "
+                               "counts_for_access; computer vision detections are shown on the map but are "
+                               "not in the scores yet.")
+        write_all(block_groups, facilities, recommendations, summary)
+    elif args.detections:
+        parser.error("--detections needs --from-model")
     elif args.synthetic:
         write_all(*build_synthetic())
     else:

@@ -20,8 +20,13 @@ npm run dev
 Open the printed URL. To test on your phone, run `npm run dev -- --host` and
 open the Network URL on a phone on the same Wi-Fi.
 
-The app ships with the access and finance model's first results (v1, OSM
-facilities only), labeled "Preliminary" in the header.
+The app ships with the access and finance model's rerun of 2026-11-22 (v2):
+OSM facilities plus the computer vision model's citywide detections (2022
+aerial imagery, 1,303 inside city limits, all unreviewed). Access scores and
+recommendations count the 363 high and medium confidence detections that are
+not already in OSM. All detections are lime dots on the map that can be
+switched off; tapping one says whether it is counted. The header badge marks
+the results as preliminary.
 
 ## Data
 
@@ -30,6 +35,15 @@ The four files in `app/public/data/` follow [docs/data_contract.md](docs/data_co
 ```bash
 # Real results: point at the folder of access and finance model outputs
 python data_pipeline/export_web_data.py --from-model path/to/outputs --version v1
+
+# Model run that already used the detections (2026-11-22 and later)
+python data_pipeline/export_web_data.py --from-model path/to/2026-11-22 --version v2 \
+  --label "Preliminary: includes unreviewed detections"
+
+# Older OSM-only run, with detections added to the map only (not the scores)
+python data_pipeline/export_web_data.py --from-model path/to/2026-11-04 --version v2 \
+  --label "Preliminary: scores use OSM facilities only" \
+  --detections path/to/detroit_detections_CITY.geojson
 
 # Synthetic data, no dependencies
 python data_pipeline/export_web_data.py --synthetic

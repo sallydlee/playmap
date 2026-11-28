@@ -32,3 +32,11 @@ export const WALK_THRESHOLD_MIN = 10;
 // Low scores are the warm colors so gaps stand out.
 export const SCORE_COLORS = ['#b2182b', '#ef8a62', '#f7f7f7', '#67a9cf', '#2166ac'];
 export const MAX_SCORE = SCORE_COLORS.length - 1;
+
+// Facility dots. Model detections use the brand lime so they read apart from
+// mapped (OSM) facilities and from the red-to-blue score scale.
+export const FACILITY_COLORS = { mapped: '#203627', detection: '#E8FF40' };
+
+// Confidence bands come from the detection export. Their cutoffs are
+// placeholders until the hand-tagged test set is scored.
+export const CONFIDENCE_BANDS = ['high', 'medium', 'low'];
