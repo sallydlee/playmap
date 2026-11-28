@@ -7,7 +7,7 @@ export default function ExportPanel({ recommendations }) {
   const count = recommendations.filter((r) => !scenario || r.scenario === scenario).length;
 
   return (
-    <div className="export no-print">
+    <div className="export">
       <h3>Export</h3>
       <label className="export-row">
         <span>Recommended sites</span>
@@ -22,7 +22,6 @@ export default function ExportPanel({ recommendations }) {
         <button className="btn" onClick={() => downloadRecommendationsCsv(recommendations, scenario || null)}>
           Download CSV ({count.toLocaleString()} sites)
         </button>
-        <button className="btn" onClick={() => window.print()}>Print / Save as PDF</button>
       </div>
     </div>
   );
