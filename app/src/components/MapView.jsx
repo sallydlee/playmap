@@ -5,20 +5,15 @@ import { boundsOf } from '../lib/bounds.js';
 import { blockGroupFill, facilityCircle, facilityLayout } from '../lib/mapStyles.js';
 
 export default function MapView({
-  blockGroups, facilities, sport, showDetections, bands, selectedGeoid, selectedFacilityId, onSelect, onSelectFacility,
+  blockGroups, facilities, sport, showDetections, selectedGeoid, selectedFacilityId, onSelect, onSelectFacility,
 }) {
   const mapRef = useRef(null);
   usePrintFit(mapRef, blockGroups);
 
-  // Filters change only which dots are drawn, never the access scores.
   const visibleFacilities = {
     ...facilities,
-    features: facilities.features.filter((f) => {
-      const p = f.properties;
-      if (sport && p.sport !== sport) return false;
-      if (p.source !== 'model') return true;
-      return showDetections && bands.has(p.confidence_band);
-    }),
+    features: facilities.features.filter((f) =>
+      (!sport || f.properties.sport === sport) && (showDetections || f.properties.source !== 'model')),
   };
 
   // A tap on a facility dot opens the facility; otherwise it opens the block group.

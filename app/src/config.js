@@ -41,9 +41,6 @@ export const FACILITY_COLORS = { mapped: '#203627', detection: '#E8FF40' };
 // placeholders until the hand-tagged test set is scored.
 export const CONFIDENCE_BANDS = ['high', 'medium', 'low'];
 
-// Labels for the confidence filter chips.
-export const CONFIDENCE_LABELS = { high: 'High', medium: 'Medium', low: 'Low' };
-
 // The access model's three recommendation scenarios (recommendations.json).
 export const SCENARIOS = [
   { id: 'full_gap_closure', label: 'Close every gap' },
