@@ -40,3 +40,13 @@ export const FACILITY_COLORS = { mapped: '#203627', detection: '#E8FF40' };
 // Confidence bands come from the detection export. Their cutoffs are
 // placeholders until the hand-tagged test set is scored.
 export const CONFIDENCE_BANDS = ['high', 'medium', 'low'];
+
+// Labels for the confidence filter chips.
+export const CONFIDENCE_LABELS = { high: 'High', medium: 'Medium', low: 'Low' };
+
+// The access model's three recommendation scenarios (recommendations.json).
+export const SCENARIOS = [
+  { id: 'full_gap_closure', label: 'Close every gap' },
+  { id: 'fixed_annual_budget', label: 'Fixed annual budget' },
+  { id: 'youth_first', label: 'Youth first (same budget)' },
+];

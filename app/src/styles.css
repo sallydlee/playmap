@@ -78,3 +78,37 @@ html, body, #root { margin: 0; height: 100%; }
 .legend .toggle { display: inline-flex; align-items: center; gap: 2px; min-height: 32px; color: var(--ink); }
 .legend .toggle input { margin: 0 6px 0 0; width: 18px; height: 18px; }
 .note { font-size: 13px; color: var(--muted); margin: 12px 0 0; }
+.chips-small { padding-bottom: 0; }
+.chips-small .chip { min-height: 32px; padding: 4px 12px; font-size: 13px; }
+.legend.confidence { margin-top: -4px; }
+
+.export { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 4px; }
+.export h3 { font-size: 14px; margin: 8px 0 6px; }
+.export-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; }
+.export-row select { min-height: 36px; font-size: 14px; max-width: 60%; }
+.export-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.btn {
+  min-height: 40px; padding: 8px 14px; border-radius: 8px; font-size: 14px;
+  border: 1px solid var(--brand); background: #fff; color: var(--brand);
+}
+.btn:active { background: var(--brand); color: #fff; }
+
+/* Print / Save as PDF: map on top, the current panel below, no controls. */
+@media print {
+  @page { margin: 12mm; }
+  .app { height: auto; overflow: visible; display: flex; flex-direction: column; }
+  .topbar { order: -1; }
+  #map { position: relative !important; width: 180mm !important; height: 120mm !important; break-inside: avoid; }
+  #map canvas { width: 100% !important; height: 100% !important; }
+  .topbar { position: static; padding: 8px 0; background: none; color: var(--ink); }
+  .badge { border: 1px solid var(--brand); }
+  .sheet {
+    position: static; max-height: none; overflow: visible; width: auto;
+    padding: 8px 0 0; box-shadow: none; border-radius: 0;
+  }
+  .no-print, .close, .hint, .chip:not(.active), .maplibregl-ctrl { display: none !important; }
+  .legend .toggle input { display: none; }
+  .legend .toggle:has(input:not(:checked)) { display: none; }
+  .chip.active { border-color: var(--brand); }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

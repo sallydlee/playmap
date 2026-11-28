@@ -4,6 +4,9 @@ import SportFilter from './components/SportFilter.jsx';
 import Legend from './components/Legend.jsx';
 import NeighborhoodPanel from './components/NeighborhoodPanel.jsx';
 import FacilityPanel from './components/FacilityPanel.jsx';
+import ConfidenceFilter from './components/ConfidenceFilter.jsx';
+import ExportPanel from './components/ExportPanel.jsx';
+import { CONFIDENCE_BANDS } from './config.js';
 import { loadData } from './lib/data.js';
 
 export default function App() {
@@ -13,6 +16,7 @@ export default function App() {
   const [selectedGeoid, setSelectedGeoid] = useState(null);
   const [selectedFacilityId, setSelectedFacilityId] = useState(null);
   const [showDetections, setShowDetections] = useState(true);
+  const [bands, setBands] = useState(() => new Set(CONFIDENCE_BANDS));
 
   useEffect(() => {
     loadData().then(setData).catch((e) => setError(e.message));
@@ -43,6 +47,11 @@ export default function App() {
     setShowDetections(on);
     if (!on && selectedFacility?.properties.source === 'model') setSelectedFacilityId(null);
   }
+  function changeBands(next) {
+    setBands(next);
+    const p = selectedFacility?.properties;
+    if (p?.source === 'model' && !next.has(p.confidence_band)) setSelectedFacilityId(null);
+  }
 
   if (error) return <div className="status">Could not load data: {error}</div>;
   if (!data) return <div className="status">Loading PlayMap…</div>;
@@ -57,6 +66,7 @@ export default function App() {
         facilities={data.facilities}
         sport={sport}
         showDetections={showDetections}
+        bands={bands}
         selectedGeoid={selectedGeoid}
         selectedFacilityId={selectedFacilityId}
         onSelect={selectGeoid}
@@ -75,6 +85,7 @@ export default function App() {
           showDetections={showDetections}
           onToggleDetections={toggleDetections}
         />
+        {hasDetections && showDetections && <ConfidenceFilter bands={bands} onChange={changeBands} />}
         {selectedFacility ? (
           <FacilityPanel facility={selectedFacility} onClose={() => setSelectedFacilityId(null)} />
         ) : (
@@ -84,6 +95,7 @@ export default function App() {
             onClose={() => setSelectedGeoid(null)}
           />
         )}
+        <ExportPanel recommendations={data.recommendations} />
       </section>
     </div>
   );
